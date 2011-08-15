@@ -62,7 +62,7 @@ class EmailTest(TestCase):
         emailAddress = EmailAddress.objects.get(email = "test@aalto.fi")
         emailConfirmation = EmailConfirmation.objects.get(email_address = emailAddress)
 
-        response = self.client.get(reverse('api_emailconfirmation', args=[emailConfirmation.confirmation_key]))	
+        response = self.client.get(reverse('api_emailconfirmation', args=[emailConfirmation.confirmation_key]))
         self.assertEquals(response.status_code,
                 200,
                 "the email address confirmation url is not working")

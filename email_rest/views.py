@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 from django.utils import translation
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.core.exceptions import ValidationError
 from django.core.validators import email_re
 from geonition_utils.HttpResponseExtenders import HttpResponseUnauthorized
@@ -36,15 +38,13 @@ def confirm_email(request, confirmation_key):
     
     template = None
     try: # try to get customized template
-        template = django.template.loader.get_template("emailconfirmation/confirm_email.html")
-    except django.templateTemplateDoesNotExist: # get default template
-        template = django.template.loader.get_template("emailconfirmation/default_cofirm_template.html")
+        template = get_template("emailconfirmation/confirm_email.html")
+    except TemplateDoesNotExist: # get default template
+        template = get_template("emailconfirmation/default_confirm_template.html")
         
     #the template will handle the invalid confirmation key
     # if the confirmation key was invalid the email_address object is None
-    return render_to_response("emailconfirmation/confirm_email.html", {
-        "email_address": email_address,
-    }, context_instance=RequestContext(request))
+    return HttpResponse(template.render(RequestContext(request, {"email_address": email_address})))
     
     
         

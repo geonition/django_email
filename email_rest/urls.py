@@ -2,7 +2,7 @@
 from django.conf.urls.defaults import patterns
 from django.conf.urls.defaults import url
 
-urlpatterns = patterns('email.views',
+urlpatterns = patterns('email_rest.views',
             url(r'^confirm-email/(\w+)/$',
                 'confirm_email',
                 name="api_emailconfirmation"),
