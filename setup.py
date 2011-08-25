@@ -6,4 +6,5 @@ setup(
     author='Kristoffer Snabb',
     url='https://github.com/geonition/django_email_rest',
     packages=['email_rest'],
+    install_requires=['django'],
 )
