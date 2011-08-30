@@ -2,7 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 setup(
-    name='auth',
+    name='email_rest',
     version='1.0.0',
     author='Kristoffer Snabb',
     url='https://github.com/geonition/django_email_rest',
