@@ -87,8 +87,8 @@ def email(request):
         try:
             email = json.loads(request.POST.keys()[0]).get("email", "")
         
-        except ValueError as exc:
-            message = 'JSON decode error: %s' % unicode(exc)
+        except ValueError:
+            message = 'JSON decode error'
             logger.warning(message)
         
             return HttpResponseBadRequest(message)
@@ -100,7 +100,7 @@ def email(request):
         try:
             is_registration = json.loads(request.POST.keys()[0]).get("registration", False)
         
-        except ValueError as exc:
+        except ValueError:
             is_registration = False
             
         logger.debug("Email POST request with param %s" %email)
