@@ -1,9 +1,7 @@
-from django.http import HttpResponse
-from django.http import HttpResponseBadRequest
-from django.http import HttpResponseForbidden
-from django.http import HttpResponseNotFound
-from django.http import HttpResponseRedirect
+from datetime import datetime
+from datetime import timedelta
 from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
 from django.utils import translation
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -11,10 +9,13 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.core.exceptions import ValidationError
 from django.core.validators import email_re
+from geonition_utils.HttpResponseExtenders import HttpResponse
+from geonition_utils.HttpResponseExtenders import HttpResponseBadRequest
+from geonition_utils.HttpResponseExtenders import HttpResponseForbidden
+from geonition_utils.HttpResponseExtenders import HttpResponseNotFound
 from geonition_utils.HttpResponseExtenders import HttpResponseUnauthorized
 from models import EmailConfirmation
 from models import EmailAddress
-from datetime import datetime, timedelta
 import logging
 import sys
 
@@ -70,81 +71,58 @@ def email(request):
     """
     #check if authenticated
     if not request.user.is_authenticated():
-        return HttpResponseForbidden(u"You haven't signed in.")
+        return HttpResponseForbidden(u"You haven't signed in")
     
     user = request.user
         
     if(request.method == "GET"):
         
-        logger.debug("Email GET request for user %s returned %s" % (user.username, user.email))
-        
         #return user email in json format
         json_data = json.dumps({"email":user.email})
-        return HttpResponse(json_data, mimetype="application/json")
+        return HttpResponse(json_data)
                 
     elif(request.method == "POST"):
         
         try:
-            email = json.loads(request.POST.keys()[0]).get("email", "")
-        
-        except ValueError:
-            message = 'JSON decode error'
-            logger.warning(message)
-        
-            return HttpResponseBadRequest(message)
-        
-        except IndexError:
-        
-            return HttpResponseBadRequest("POST data was empty so no email address could be retrieven from it")
-    
-        try:
-            is_registration = json.loads(request.POST.keys()[0]).get("registration", False)
-        
-        except ValueError:
-            is_registration = False
             
-        logger.debug("Email POST request with param %s" %email)
-       
+            email = request.POST.get('value', '')
+        
+        except ValueError:
+            
+            return HttpResponseBadRequest('JSON decode error')
+        
+        except IndexError:    
+            return HttpResponseBadRequest("POST data was empty so no email "
+                                          "address could be retrieven from it")
+    
         #check if email was provided
         if (email == "" or email == None):
-            logger.warning("Email sent POST was empty or none")
             return HttpResponseBadRequest(
                     u"Expected argument email was not provided")
 
 
         
-        #Test if the email address is the same as existing one. If so don't send the confirmation email
+        # Test if the email address is the same as existing one.
+        # If so don't send the confirmation email
         if (user.email != email):
           
             #validate email
             if not email_re.match(email):
-                 logger.warning("The email address %s is not valid" %email)
-                 return HttpResponseBadRequest(
-                    u"Email is not valid")
+                 return HttpResponseBadRequest(u"Email is not valid")
                 
             
             #Send confirmation email
             email_address = EmailAddress.objects.add_email(user, email)
 
             if email_address == None:
-                logger.warning("The email address %s is invalid or not unique" %email)
-                
-                #check if user is just created and delete it as the email registration failed
-                three_mins_ago = datetime.now() + timedelta(minutes=-3)
-                if user.date_joined > three_mins_ago and is_registration:
-                    #delete the user
-                    request.user.delete()
                 
                 return HttpResponseBadRequest(u"Email is either invalid or not unique")    
             else:
-                logger.debug("Email %s has been added successfully for user %s and the confimation email has been sent" % (email, user.username))
-                return HttpResponse(content = _(u"A confirmation email was sent to your new email address. Follow the intructions in the email to complete the registration."),
-                                status = 200)
+                return HttpResponse(u"A confirmation email was sent to your "
+                                    "new email address. Follow the intructions "
+                                    "in the email to complete the registration.")
 
-        logger.debug("The user %s already had assigned email %s so the POST was ignored" % (user.username,email )) 
-
-        return HttpResponse(_(u"You already have this email address assigned to you"),
-                            status=200)    
+        return HttpResponse(u"You already have this email address assigned to you")    
        
     elif (request.method  == "DELETE"):
 
@@ -157,8 +135,7 @@ def email(request):
         #save changes
         request.user.save()
         
-        return HttpResponse(u"Email was succesfully deleted",
-                            status=200)
+        return HttpResponse(u"Email was succesfully deleted")
         
 
                 

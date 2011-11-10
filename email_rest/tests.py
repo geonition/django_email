@@ -10,15 +10,10 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry
 from django.core import mail
+from django.utils import simplejson as json
 from models import EmailConfirmation
 from models import EmailAddress
 
-import sys
-
-if sys.version_info >= (2, 6):
-    import json
-else:
-    import simplejson as json
     
 class EmailTest(TestCase):
 
@@ -38,7 +33,7 @@ class EmailTest(TestCase):
         """
         
         #case 1 - no email sent
-        post_content = {"email" : ""}
+        post_content = {"value" : ""}
         
         response = self.client.post(reverse('api_manage_email'),
                                     json.dumps(post_content),
@@ -49,9 +44,10 @@ class EmailTest(TestCase):
                 "trying to set empty email address")
 
     def test_email_update_with_data(self):
-        post_content = {"email" : "test@aalto.fi"}
+        post_content = {"value" : "test@aalto.fi"}
         response = self.client.post(reverse('api_manage_email'),
                                     json.dumps(post_content),
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest',
                                     content_type='application/json')
 
         #Test if confirmation email is sent
@@ -68,7 +64,9 @@ class EmailTest(TestCase):
                 "the email address confirmation url is not working")
         response = self.client.get(reverse('api_manage_email'))
         responsejson = json.loads(response.content)
-        self.assertEquals(responsejson.get('email'), "test@aalto.fi", "The email obtain using get is not ok")
+        self.assertEquals(responsejson.get('email'),
+                          "test@aalto.fi",
+                          "The email obtain using get is not ok")
 
         #delete the email and test again the GET
         response = self.client.delete(reverse('api_manage_email'))
@@ -85,7 +83,7 @@ class EmailTest(TestCase):
         user3 = User.objects.create_user('cristian1002','', 'cristi')
         EmailAddress.objects.add_email(user3, 'test3@test.com')
         
-        post_content = {"email" : "test2@test.com", "registration" : True}
+        post_content = {"value" : "test2@test.com", "registration" : True}
         response = self.client.post(reverse('api_manage_email'),
                             json.dumps(post_content),
                             content_type='application/json')
