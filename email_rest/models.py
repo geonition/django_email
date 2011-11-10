@@ -2,13 +2,14 @@ from datetime import datetime, timedelta
 from random import random
 from django.core.exceptions import ValidationError
 from django.conf import settings
-from django.db import models, IntegrityError
+from django.db import models
+from django.db import IntegrityError
 from django.template.loader import render_to_string
-from django.core.urlresolvers import reverse, NoReverseMatch
+from django.core.urlresolvers import reverse
+from django.core.urlresolvers import NoReverseMatch
 from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
 from django.utils.hashcompat import sha_constructor
-from django.utils.translation import gettext_lazy as _
 
 from signals import email_confirmed
 from utils import get_send_mail
@@ -27,8 +28,7 @@ class EmailAddressManager(models.Manager):
         
         existing_email = self.filter(email=email)
         
-        if len(existing_email) > 0: 
-            logger.error('Email address is not unique: %s' % email)
+        if len(existing_email) > 0:
             return None
         
         try:
@@ -38,7 +38,6 @@ class EmailAddressManager(models.Manager):
             EmailConfirmation.objects.send_confirmation(email_address)
             return email_address
         except IntegrityError:
-            logger.error('Email address format is invalid: %s' % email)
             return None
 
     def get_primary(self, user):
@@ -83,8 +82,8 @@ class EmailAddress(models.Model):
         return u"%s (%s)" % (self.email, self.user)
 
     class Meta:
-        verbose_name = _("e-mail address")
-        verbose_name_plural = _("e-mail addresses")
+        verbose_name = u"e-mail address"
+        verbose_name_plural = u"e-mail addresses"
         unique_together = (
             ("user", "email"),
         )
@@ -112,14 +111,15 @@ class EmailConfirmationManager(models.Manager):
         salt = sha_constructor(str(random())).hexdigest()[:5]
         confirmation_key = sha_constructor(salt + email_address.email).hexdigest()
         current_site = Site.objects.get_current()
+        
         # check for the url with the dotted view path
         try:
             path = reverse("email.views.confirm_email",
-                args=[confirmation_key])
+                           args=[confirmation_key])
         except NoReverseMatch:
             # or get path with named urlconf instead
-            path = reverse(
-                "api_emailconfirmation", args=[confirmation_key])
+            path = reverse("api_emailconfirmation",
+                           args=[confirmation_key])
         activate_url = u"http://%s%s" % (unicode(current_site.domain), path)
         context = {
             "user": email_address.user,
@@ -135,6 +135,7 @@ class EmailConfirmationManager(models.Manager):
             "emailconfirmation/email_confirmation_message.txt", context)
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL,
                   [email_address.email], priority="high")
+        
         return self.create(
             email_address=email_address,
             sent=datetime.now(),
@@ -163,5 +164,5 @@ class EmailConfirmation(models.Model):
         return u"confirmation for %s" % self.email_address
 
     class Meta:
-        verbose_name = _("e-mail confirmation")
-        verbose_name_plural = _("e-mail confirmations")
+        verbose_name = u"e-mail confirmation"
+        verbose_name_plural = u"e-mail confirmations"
