@@ -86,6 +86,10 @@ def email(request):
         try:
             
             email = request.POST.get('value', '')
+            
+            #fix for some backwards compatibility
+            if email == '':
+                email = request.POST.get('email', '')
         
         except ValueError:
             
