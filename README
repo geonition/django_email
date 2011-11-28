@@ -1,1 +1,3 @@
 This application provides REST interface for handling email confirmations and other crud functionality for emails.
+
+This application is not maintained anymore and is now emvedded in opensocial_people application to provide a way to validate the email saved into a person object.
